@@ -57,7 +57,6 @@ end
 
 to go
   spread-fire
-  move-turtles
   tick
 end
 
@@ -72,35 +71,6 @@ to spread-fire
     ]
   ]
 end
-
-to move-turtles
-  ask turtles [
-    let neighboring [self] of patches in-radius 1.5 with [
-      pcolor = white and not any? turtles-here
-    ]
-
-    let best-patch nobody
-    let max-score -999
-
-    foreach neighboring [ x ->
-      let score [pycor] of x
-      let fire-nearby count ([patches in-radius 2] of x) with [pcolor = red]
-      set score score - (fire-nearby * 3)
-      let nearby-turtles count turtles-on [neighbors] of x
-      set score score - (nearby-turtles * 2)
-      if score > max-score [
-        set max-score score
-        set best-patch x
-      ]
-    ]
-
-    if best-patch != nobody [
-      face best-patch
-      move-to best-patch
-    ]
-  ]
-end
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
