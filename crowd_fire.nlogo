@@ -1,9 +1,10 @@
 globals [fire-graceful-period]
+turtles-own [visited-patches move-right move-left]
 
 to setup
   clear-all
 
-  set fire-graceful-period 8
+  set fire-graceful-period 10
 
   ask patches [
     set pcolor white
@@ -21,26 +22,39 @@ to setup
   let turtles-cnt 60
   let shift floor ((max-pxcor - turtles-cnt) / 2)
 
-  ask patches with [pycor = min-pycor] [
+  ask patches with [pxcor > 30 and pxcor < max-pxcor - 30 and pycor = 0] [
+    set pcolor red
+  ]
+
+  ask patches with [pycor > 45 and pycor < 50 and pxcor = 80] [
     set pcolor red
   ]
 
   create-turtles turtles-cnt [
-    setxy (min-pxcor + shift + who) (min-pycor + 5)
+    setxy (min-pxcor + shift + who) (min-pycor + 7)
     set color blue
     set shape "circle"
+    set visited-patches []
+    set move-right false
+    set move-left false
   ]
 
   create-turtles turtles-cnt [
-    setxy (min-pxcor + shift + who - turtles-cnt) (min-pycor + 4)
+    setxy (min-pxcor + shift + who - turtles-cnt) (min-pycor + 6)
     set color blue
     set shape "circle"
+    set visited-patches []
+    set move-right false
+    set move-left false
   ]
 
   create-turtles turtles-cnt [
-    setxy (min-pxcor + shift + who - 2 * turtles-cnt) (min-pycor + 3)
+    setxy (min-pxcor + shift + who - 2 * turtles-cnt) (min-pycor + 5)
     set color blue
     set shape "circle"
+    set visited-patches []
+    set move-right false
+    set move-left false
   ]
 
   reset-ticks
@@ -63,7 +77,7 @@ end
 
 to spread-fire
   ask patches [
-    if ticks > fire-graceful-period and pcolor = red and (ticks mod 3 = 0) [
+    if ticks > fire-graceful-period and pcolor = red and (ticks mod 4 = 0) [
       ask neighbors4 [
         if pcolor = white [
           set pcolor red
@@ -73,34 +87,124 @@ to spread-fire
   ]
 end
 
+to-report count-obstacles-in-direction [first-obstacle-patch checked-patches direction]
+  let x ([pxcor] of first-obstacle-patch) + direction
+  let y [pycor] of first-obstacle-patch
+
+  let patches-count 0
+  while [
+    patch x y != nobody and
+    member? patch x y checked-patches and
+    [pcolor] of patch x y = pink
+  ] [
+    set patches-count patches-count + 1
+    set x x + direction
+  ]
+
+  report patches-count
+end
+
+to-report choose-patch-to-move [best-patches]
+  (ifelse
+    count best-patches = 1 [
+      report one-of best-patches
+    ]
+    count best-patches > 1 [
+      ;check if a turtle is close to a obstacle and if it can see an end of the obstacle
+      ;if the end is visible, go there and omit the obstacle
+      let checked-patches patches in-radius 10 with [ pcolor = pink ]
+      let first-obstacle-patch min-one-of checked-patches with [ pxcor = [pxcor] of myself ] [pycor]
+      if first-obstacle-patch != nobody [
+        let patches-to-right count-obstacles-in-direction first-obstacle-patch checked-patches 1
+        let patches-to-left count-obstacles-in-direction first-obstacle-patch checked-patches -1
+
+        let max-left-obstacle pxcor - patches-to-left
+        let max-right-obstacle pxcor + patches-to-right
+
+        ;these to ifs are to detect the situation when the obstacle is at the boundary of a map
+        ;in such situation there is no point to go towards the closer end when it is adjacent to the boundary - cannot pass there
+        if max-left-obstacle = min-pxcor or (max-right-obstacle != max-pxcor and patches-to-right < patches-to-left) [
+          set move-right true
+          set move-left false
+        ]
+
+        if max-right-obstacle = max-pxcor or (max-left-obstacle != min-pxcor and patches-to-left < patches-to-right) [
+          set move-left true
+          set move-right false
+        ]
+
+        let patch-to-move nobody
+        if move-right [
+          set patch-to-move max-one-of best-patches with [ pxcor > [pxcor] of myself ] [pycor]
+        ]
+
+        if move-left [
+          set patch-to-move max-one-of best-patches with [ pxcor < [pxcor] of myself ] [pycor]
+        ]
+
+        ;prefer going closer to the exit (upper boundary)
+        if patch-to-move = nobody [
+          set patch-to-move max-one-of best-patches [pycor]
+        ]
+
+        report patch-to-move
+      ]
+
+      if first-obstacle-patch = nobody [
+        let patch-to-move max-one-of best-patches [pycor]
+        report patch-to-move
+      ]
+    ]
+  )
+
+  report nobody
+end
+
 to move-turtles
   ask turtles [
+    ;die just to remove the turtles that reached the exit
+    if pycor = max-pycor [ die ]
+
     let neighboring [self] of patches in-radius 1.5 with [
-      pcolor = white and not any? turtles-here
+      pcolor = white
+      and not any? turtles-here
+      and not member? self [visited-patches] of myself
     ]
 
-    let best-patch nobody
+    let best-patches no-patches
     let max-score -999
 
     foreach neighboring [ x ->
       let score [pycor] of x
       let fire-nearby count ([patches in-radius 2] of x) with [pcolor = red]
-      set score score - (fire-nearby * 3)
+      set score score - (fire-nearby * 5)
       let nearby-turtles count turtles-on [neighbors] of x
-      set score score - (nearby-turtles * 2)
+      set score score - nearby-turtles
       if score > max-score [
         set max-score score
-        set best-patch x
+        set best-patches patch-set x
+      ]
+
+      if score = max-score [
+        set best-patches (patch-set best-patches x)
       ]
     ]
 
-    if best-patch != nobody [
-      face best-patch
-      move-to best-patch
+    let patch-to-move choose-patch-to-move best-patches
+
+    ;remember a few visited patches to prevent from cycling
+    if ticks > 4 and not empty? visited-patches [
+      set visited-patches but-first visited-patches
+    ]
+
+    if patch-to-move != nobody [
+      face patch-to-move
+      move-to patch-to-move
+
+      set visited-patches lput patch-to-move visited-patches
     ]
   ]
 end
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
