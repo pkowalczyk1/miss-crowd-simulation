@@ -381,7 +381,7 @@ turtles-cnt
 turtles-cnt
 10
 560
-265.0
+559.0
 1
 1
 NIL
@@ -395,7 +395,7 @@ CHOOSER
 map-version
 map-version
 "v1" "v2" "v3" "v4" "v5" "v6" "v7"
-6
+1
 
 SLIDER
 9
@@ -406,7 +406,7 @@ fire-graceful-period
 fire-graceful-period
 0
 20
-11.0
+10.0
 1
 1
 NIL
@@ -421,7 +421,7 @@ fire-speed
 fire-speed
 1
 10
-10.0
+1.0
 1
 1
 NIL
@@ -435,7 +435,7 @@ CHOOSER
 fire-start
 fire-start
 "v1" "v2" "v3" "v4"
-2
+1
 
 MONITOR
 9
