@@ -3,6 +3,8 @@ turtles-own [visited-patches move-right move-left]
 
 to setup
   clear-all
+  set safe-cnt 0
+  set dead-cnt 0
 
   ask patches [
     set pcolor white
@@ -170,6 +172,7 @@ to go
   spread-fire
   move-turtles
   tick
+  if not any? turtles with [color = blue] [ stop ]
 end
 
 to spread-fire
@@ -339,9 +342,9 @@ ticks
 30.0
 
 BUTTON
-9
+10
 206
-200
+201
 239
 NIL
 setup
@@ -381,7 +384,7 @@ turtles-cnt
 turtles-cnt
 10
 560
-265.0
+560.0
 1
 1
 NIL
@@ -395,7 +398,7 @@ CHOOSER
 map-version
 map-version
 "v1" "v2" "v3" "v4" "v5" "v6" "v7"
-6
+5
 
 SLIDER
 9
@@ -406,7 +409,7 @@ fire-graceful-period
 fire-graceful-period
 0
 20
-11.0
+20.0
 1
 1
 NIL
@@ -421,7 +424,7 @@ fire-speed
 fire-speed
 1
 10
-10.0
+2.0
 1
 1
 NIL
@@ -805,6 +808,70 @@ NetLogo 6.4.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="experiment" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>safe-cnt</metric>
+    <metric>dead-cnt</metric>
+    <enumeratedValueSet variable="fire-start">
+      <value value="&quot;v1&quot;"/>
+      <value value="&quot;v2&quot;"/>
+      <value value="&quot;v3&quot;"/>
+      <value value="&quot;v4&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="map-version">
+      <value value="&quot;v1&quot;"/>
+      <value value="&quot;v2&quot;"/>
+      <value value="&quot;v3&quot;"/>
+      <value value="&quot;v4&quot;"/>
+      <value value="&quot;v5&quot;"/>
+      <value value="&quot;v6&quot;"/>
+      <value value="&quot;v7&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="turtles-cnt">
+      <value value="10"/>
+      <value value="50"/>
+      <value value="100"/>
+      <value value="200"/>
+      <value value="300"/>
+      <value value="400"/>
+      <value value="500"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fire-speed">
+      <value value="1"/>
+      <value value="2"/>
+      <value value="3"/>
+      <value value="4"/>
+      <value value="5"/>
+      <value value="6"/>
+      <value value="7"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fire-graceful-period">
+      <value value="0"/>
+      <value value="1"/>
+      <value value="2"/>
+      <value value="3"/>
+      <value value="4"/>
+      <value value="5"/>
+      <value value="6"/>
+      <value value="7"/>
+      <value value="8"/>
+      <value value="9"/>
+      <value value="10"/>
+      <value value="11"/>
+      <value value="12"/>
+      <value value="13"/>
+      <value value="14"/>
+      <value value="15"/>
+      <value value="16"/>
+      <value value="17"/>
+      <value value="18"/>
+      <value value="19"/>
+      <value value="20"/>
+    </enumeratedValueSet>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
